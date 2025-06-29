@@ -12,11 +12,12 @@ All required packages are listed in `requirements.txt`.
 
 ## Running the API
 
-Install dependencies and start the application using `uvicorn`:
+Install dependencies and start the application using `uvicorn` (run the command
+from the repository root or adjust the import path accordingly):
 
 ```bash
 pip install -r requirements.txt
-uvicorn app.main:app --reload
+uvicorn student_api.app.main:app --reload
 ```
 
 The server will start at `http://127.0.0.1:8000`. Interactive API docs are available at `http://127.0.0.1:8000/docs`.
