@@ -1,7 +1,10 @@
 from fastapi.testclient import TestClient
-from student_api.app.main import app
+from student_api.app.main import app, get_repository
+from student_api.app.repository import InMemoryStudentRepository
 
+app.dependency_overrides[get_repository] = lambda: InMemoryStudentRepository()
 client = TestClient(app)
+
 
 def test_create_and_get_student():
     data = {
@@ -13,7 +16,7 @@ def test_create_and_get_student():
         "email": "alice@example.com",
         "address": "123 Road",
         "father_name": "Bob",
-        "mother_name": "Carol"
+        "mother_name": "Carol",
     }
     response = client.post("/students", json=data)
     assert response.status_code == 201

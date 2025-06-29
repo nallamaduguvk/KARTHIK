@@ -1,24 +1,27 @@
 # Student API
 
-This project provides a simple REST API for managing student details using [FastAPI](https://fastapi.tiangolo.com/). It stores data in-memory and is intended for demonstration purposes.
+This project provides a simple REST API for managing student details using [FastAPI](https://fastapi.tiangolo.com/). Data can be stored in MongoDB or kept in-memory for testing.
 
 ## Requirements
 
 - Python 3.8+
 - FastAPI
 - Uvicorn
+- Motor (MongoDB driver)
+- Jinja2
 
 All required packages are listed in `requirements.txt`.
 
 ## Running the API
 
-Install dependencies and start the application using `uvicorn` (run the command
-from the repository root or adjust the import path accordingly):
+Install dependencies and start the application using `uvicorn`:
 
 ```bash
 pip install -r requirements.txt
 uvicorn student_api.app.main:app --reload
 ```
+
+If the environment variable `MONGODB_URI` is set, the API will store data in MongoDB. Otherwise it falls back to an in-memory store.
 
 The server will start at `http://127.0.0.1:8000`. Interactive API docs are available at `http://127.0.0.1:8000/docs`.
 
@@ -47,8 +50,6 @@ Example JSON body:
 }
 ```
 
-This workflow allows you to test all endpoints from Postman without writing any code.
-
 ## Available Endpoints
 
 - `POST /students` – Create a new student
@@ -64,4 +65,3 @@ Tests use `pytest`. Execute them with:
 ```bash
 pytest
 ```
-
