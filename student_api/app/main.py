@@ -1,60 +1,57 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, EmailStr, Field
-from typing import Dict, List
+import os
+from fastapi import FastAPI, HTTPException, Depends
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from fastapi import Request
+from typing import List
+
+from .models import StudentCreate, Student
+from .repository import (
+    StudentRepository,
+    InMemoryStudentRepository,
+    MongoStudentRepository,
+)
 
 app = FastAPI(title="Student API")
+templates = Jinja2Templates(directory=os.path.join(os.path.dirname(__file__), "templates"))
 
-class StudentBase(BaseModel):
-    first_name: str = Field(..., example="John")
-    last_name: str = Field(..., example="Doe")
-    grade: str = Field(..., example="10")
-    age: int = Field(..., ge=1, example=15)
-    phone_number: str = Field(..., example="1234567890")
-    email: EmailStr = Field(..., example="john@example.com")
-    address: str = Field(..., example="123 Main St")
-    father_name: str = Field(..., example="Father Name")
-    mother_name: str = Field(..., example="Mother Name")
+# Dependency to get repository
+def get_repository() -> StudentRepository:
+    uri = os.getenv("MONGODB_URI")
+    if uri:
+        db_name = os.getenv("MONGODB_DB", "studentdb")
+        return MongoStudentRepository(uri, db_name)
+    return InMemoryStudentRepository()
 
-class StudentCreate(StudentBase):
-    pass
-
-class Student(StudentBase):
-    id: int
-
-# In-memory store
-students: Dict[int, Student] = {}
-current_id: int = 0
+@app.get("/", response_class=HTMLResponse)
+async def index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 @app.post("/students", response_model=Student, status_code=201)
-def create_student(student: StudentCreate) -> Student:
-    global current_id
-    current_id += 1
-    new_student = Student(id=current_id, **student.dict())
-    students[current_id] = new_student
-    return new_student
+async def create_student(student: StudentCreate, repo: StudentRepository = Depends(get_repository)) -> Student:
+    return await repo.create(student)
 
 @app.get("/students", response_model=List[Student])
-def list_students() -> List[Student]:
-    return list(students.values())
+async def list_students(repo: StudentRepository = Depends(get_repository)) -> List[Student]:
+    return await repo.list()
 
 @app.get("/students/{student_id}", response_model=Student)
-def get_student(student_id: int) -> Student:
-    student = students.get(student_id)
+async def get_student(student_id: str, repo: StudentRepository = Depends(get_repository)) -> Student:
+    student = await repo.get(student_id)
     if not student:
         raise HTTPException(status_code=404, detail="Student not found")
     return student
 
 @app.put("/students/{student_id}", response_model=Student)
-def update_student(student_id: int, student_data: StudentCreate) -> Student:
-    if student_id not in students:
+async def update_student(student_id: str, student_data: StudentCreate, repo: StudentRepository = Depends(get_repository)) -> Student:
+    updated = await repo.update(student_id, student_data)
+    if not updated:
         raise HTTPException(status_code=404, detail="Student not found")
-    updated = Student(id=student_id, **student_data.dict())
-    students[student_id] = updated
     return updated
 
 @app.delete("/students/{student_id}", status_code=204)
-def delete_student(student_id: int) -> None:
-    if student_id not in students:
+async def delete_student(student_id: str, repo: StudentRepository = Depends(get_repository)) -> None:
+    success = await repo.delete(student_id)
+    if not success:
         raise HTTPException(status_code=404, detail="Student not found")
-    del students[student_id]
     return None
