@@ -30,6 +30,22 @@ Once the server is running you can exercise the API with [Postman](https://www.p
 3. For POST and PUT requests, select **Body → raw → JSON** and provide the student data.
 4. Send the request and inspect the response.
 
+Example JSON body:
+
+```json
+{
+  "first_name": "John",
+  "last_name": "Doe",
+  "grade": "10",
+  "age": 16,
+  "phone_number": "1234567890",
+  "email": "john@example.com",
+  "address": "123 Main St",
+  "father_name": "Jack Doe",
+  "mother_name": "Jane Doe"
+}
+```
+
 This workflow allows you to test all endpoints from Postman without writing any code.
 
 ## Available Endpoints
